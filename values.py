@@ -24,7 +24,7 @@ from error import WinnowError
 from dateutil.parser import parse as parse_date
 from datetime import datetime
 import json
-from utilities.constants import valid_rel_date_values
+from relative_dates import valid_rel_date_values
 
 # TODO : Since we're storing filters denormalized as JSON now, we probably need
 # Less of this crazy vivification stuff. For another day, perhaps.

@@ -1,7 +1,7 @@
 import default_operators
 from error import WinnowError
 
-from utilities import render_template
+from templating import render_template
 
 def sql_type(value_type):
     if value_type in ('absolute_date', 'relative_date'):

@@ -31,6 +31,7 @@ OPERATORS = [
     dict(name='is set', value_type='nullable', coalesced_value_type='bool', negative=True),
 ]
 
+
 def get_sql_binary_op(op_name):
     if op_name in ('>=', '<=', '>', '<'):
         return op_name
