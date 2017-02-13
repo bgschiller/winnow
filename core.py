@@ -7,6 +7,7 @@ from error import WinnowError, WinnowWarning
 import values
 import default_operators
 import sql_prepare
+from templating import SqlFragment
 
 class Winnow(object):
     """
@@ -192,9 +193,10 @@ class Winnow(object):
         return source, operator
 
     def query(self, filt):
+        frag = self.where_clauses(filt)
         return "SELECT * FROM {} WHERE {}".format(
             self.table,
-            self.where_clauses(filt))
+            frag.query), frag.params
 
     def strip(self, filt):
         """
@@ -232,9 +234,11 @@ class Winnow(object):
         if not where_clauses:
             return '(1=1)'
 
-        logical_op = '\nAND \n  ' if filt['logical_op'] == '&' else '\nOR \n  '
+        sep = '\nAND \n  ' if filt['logical_op'] == '&' else '\nOR \n  '
         self.strip(filt)
-        return '(\n  ' + logical_op.join(where_clauses) + '\n)'
+        sql_frag = SqlFragment.join(sep, where_clauses)
+        sql_frag.query = '(' + sql_frag.query + ')'
+        return sql_frag
 
     def _dispatch_clause(self, clause):
         """

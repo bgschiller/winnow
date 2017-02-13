@@ -4,155 +4,104 @@ import datetime
 import json
 import warnings
 import decimal
+import jinjasql
 import jinja2
-import random
-import string
+import collections
 
-env = jinja2.Environment(trim_blocks=True)
+# Monkey Patch the bind function to support more types.
+from jinja2.utils import Markup
+from jinjasql.core import (
+    _bind_param, _thread_local, requires_in_clause, MissingInClauseException,
+    InvalidBindParameterException, is_dictionary)
 
-def render_template(temp_data, *actx, **ctx):
+def bind(value, name):
+    """A filter that prints %s, and stores the value
+    in an array, so that it can be bound using a prepared statement
+    This filter is automatically applied to every {{variable}}
+    during the lexing stage, so developers can't forget to bind
+    """
+    suffix = ''
+    if isinstance(value, Markup):
+        return value
+    elif isinstance(value, pg_null):
+        return value
+
+    if isinstance(value, (list, dict, PGJson)):
+        suffix = '::jsonb'
+        value = jsonify(getattr(value, 'adapted', value))
+    elif isinstance(value, datetime.datetime):
+        suffix = '::timestamp'
+    elif isinstance(value, decimal.Decimal):
+        value = float(value)
+    elif isinstance(value, jinja2.Undefined):
+        value = None
+    return _bind_param(_thread_local.bind_params, name, value) + suffix
+
+import jinjasql.core
+jinjasql.core.bind = bind
+
+j = jinjasql.JinjaSql()
+
+class SqlFragment(object):
+    def __init__(self, query, params):
+        self.query = query
+        self.params = params
+
+    def __add___(self, other):
+        return SqlFragment(self.query + other.query, self.params + other.params)
+
+    @staticmethod
+    def join(sep, elems):
+        return SqlFragment(
+            sep.join(e.query for e in elems),
+            tuple(v for e in elems for v in e.params))
+
+def render_template(temp_data, **ctx):
     """
     render a jinja2 template in the custom environment.
     """
-    return (env
-            .from_string(temp_data)
-            .render(*actx, **ctx))
+    query, params = j.prepare_query(temp_data, ctx)
+    return SqlFragment(query, params)
 
-RAND_STRING_ELTS = string.letters
-def random_string(length=6):
-    """
-    Generate a random string for use in pg_quoting.
+class pg_null(object):
+    def __init__(self, pg_type):
+        self.pg_type = pg_type
 
-    With the default length of 6, for an attacker with no extra information to guess
-    this value is 1 in 19,770,609,664 or
-        - 112 times less likely than winning the Mega Millions (1 in 176 M)
-        - 1,977 times less likely than becoming president (1 in 10 M)
-        - 3,295 times less likely than dying from bee, hornet, or wasp stings (1 in 6.1 M)
-        - 6,590,203 times less likely than being struck by lightning in your lifetime (1 in 3000)
+    def __unicode__(self):
+        return 'NULL::{}'.format(self.pg_type)
 
-    relevant xkcd: http://xkcd.com/795/
-
-    :param length: the number of random digits
-    :return: A random sequence of <length> digits, drawn from RAND_STRING_ELTS
-    """
-    return ''.join(random.SystemRandom()
-            .choice(RAND_STRING_ELTS)
-            for _ in range(length))
+    __str__ = __unicode__
 
 def register_filter(func):
-    env.filters[func.__name__] = func
+    j.env.filters[func.__name__] = func
     return func
 
 @register_filter
-def pg_quote(val):
-    """
-    Create a safely quoted string literal for consumption by postgres.
-
-    Postgres allows you to quote strings like 'hello' using like so:
-        $randomletters$hello$randomletters$
-    This means that it is difficult/impossible to sustain a SQL-injection attack
-    when using one of these dollar-quoted strings, since postgres will just keep
-    scanning until it sees the pattern '$randomletters$', where randomletters is
-    spontaneously determined at runtime.
-    """
-    return u'${pattern}${val}${pattern}$'.format(pattern=random_string(), val='{}'.format(val).replace('%', '%%'))
-
-@register_filter
-def pg_bool(val):
-    return u'true' if val else u'false'
-
-@register_filter
-def pg_literal(val):
-    """
-    Translate a python variable to a valid SQL literal.
-
-    This is a safe method to call (no sql-injection). However, it might not have your
-    favorite data-type.
-    """
-    from utilities import PGJson
-
-    if isinstance(val, (type(None), jinja2.Undefined)):
-        return 'NULL'
-    if isinstance(val, bool):
-        return pg_bool(val)
-    if isinstance(val, (int, decimal.Decimal)):
-        return str(int(val))
-    if isinstance(val, float):
-        return '{:.10f}'.format(val)  # 10 oughta be enough, right?
-    if isinstance(val, datetime.datetime):
-        return "'{}'::timestamp".format(val.isoformat())
-    if isinstance(val, basestring):
-        return pg_quote(val)
-    if isinstance(val, PGJson):
-        return "{}::jsonb".format(pg_quote(jsonify(val.adapted)))
-    if isinstance(val, (list, dict)):
-        return "{}::jsonb".format(pg_quote(jsonify(val)))
-
-    warnings.warn(
-        "Didn't recognize value {} of type {}. Attempting to represent as a string.".format(val, type(val)),
-        RuntimeWarning)
-    return pg_quote(val)
-
-
-@register_filter
-def comma_sep_and_quote(str_list):
-    """
-    safely quote and comma sep string literals for use in a postgres query.
-
-    If str_list is empty, return a random (unlikely to be found in the db) pattern,
-    as querying "id IN ()" is a syntax error. We would rather do "id IN ('adsflkjadsfjl')
-    and have it still match nothing.
-    """
-    if not len(str_list):
-        return u"'{}'".format(random_string())  # pattern is alphanumeric, so safe.
-    return u', '.join(pg_quote(val) for val in str_list)
-
-@register_filter
-def UNSAFE_comma_sep_and_quote(str_list):
-    """
-    UNSAFELY quote and comma sep string literals for use in a postgres query.
-
-    This just uses regular old ' quotes. It's faster and easier on the eyes, but
-    best to use only when you know the input is trusted (eg, a set of opp_ids that
-    already came from the db).
-
-    If str_list is empty, return a random (unlikely to be found in the db) pattern,
-    as querying "id IN ()" is a syntax error. We would rather do "id IN ('adsflkjadsfjl')
-    and have it still match nothing.
-    """
-    if not len(str_list):
-        return u"'{}'".format(random_string())  # pattern is alphanumeric, so safe.
-    return u', '.join(u"'{}'".format(val) for val in str_list)
-
-@register_filter
-def dt_to_ts(dt):
-    """
-    Convert a dt to a string representation of a timestamp.
-    """
-    return u"'{}'::timestamp".format(dt.isoformat())
-
-@register_filter
-def row_sep_and_quote(str_list):
+def anyclause(str_list):
     """
     Like comma_sep_and_quote, but for use in a id = ANY(VALUES )call
 
     This can be as much as 10x faster than id IN ()
     (some sources say 100x faster, but I haven't seen it)
     """
-    if not len(str_list):
+    values = list(value)
+    if not len(values):
         return u"(NULL)"
-    return u', '.join(u"({})".format(pg_quote(val)) for val in str_list)
+
+    results = []
+    for v in values:
+        results.append('(' + _bind_param(_thread_local.bind_params, "anyclause", v) + ')')
+
+    clause = ", ".join(results)
+    return clause
+
 
 @register_filter
-def UNSAFE_row_sep_and_quote(str_list):
-    """
-    Like comma_sep_and_quote, but for use in a id = ANY(VALUES )call
-    This can be as much as 10x faster than id IN ()
-    (some sources say 100x faster, but I haven't seen it)
-    """
-    if not len(str_list):
-        return u"(NULL)"
-    return u', '.join(u"('{}')".format(val) for val in str_list)
+def pg_array(lst):
+    return 'array[' + ', '.join(
+        _bind_param(_thread_local.bind_params, 'pg_array', v)
+        for v in lst) + ']'
+
 
 def json_custom_parser(obj):
     """
@@ -166,10 +115,9 @@ def json_custom_parser(obj):
     else:
         raise TypeError(obj)
 
-@register_filter
 def jsonify(obj):
     return json.dumps(obj, default=json_custom_parser)
 
-@register_filter
-def pg_array(lst):
-    return 'array[' + ', '.join(map(pg_quote,lst)) + ']'
+class PGJson(object):
+    def __init__(self, adapted):
+        self.adapted = adapted
