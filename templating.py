@@ -11,7 +11,7 @@ from jinjasql.core import _bind_param, _thread_local
 
 
 # Replace the bind function to support more types.
-def better_bind(value, name):
+def _better_bind(value, name):
     """A filter that prints %s, and stores the value
     in an array, so that it can be bound using a prepared statement
     This filter is automatically applied to every {{variable}}
@@ -40,7 +40,7 @@ def better_bind(value, name):
     return _bind_param(_thread_local.bind_params, name, value) + suffix
 
 
-def anyclause(str_list):
+def _anyclause(str_list):
     """
     Like comma_sep_and_quote, but for use in a id = ANY(VALUES )call
 
@@ -60,7 +60,7 @@ def anyclause(str_list):
     return clause
 
 
-def pg_array(lst):
+def _pg_array(lst):
     return 'array[' + ', '.join(
         _bind_param(_thread_local.bind_params, 'pg_array', v)
         for v in lst) + ']'
@@ -69,9 +69,9 @@ def pg_array(lst):
 class WinnowSql(jinjasql.JinjaSql):
     def __init__(self, *args, **kwargs):
         super(WinnowSql, self).__init__(*args, **kwargs)
-        self.env.filters['bind'] = better_bind
-        self.env.filters['anyclause'] = anyclause
-        self.env.filters['pg_array'] = pg_array
+        self.env.filters['bind'] = _better_bind
+        self.env.filters['anyclause'] = _anyclause
+        self.env.filters['pg_array'] = _pg_array
 
     def prepare_query(self, temp_data, **ctx):
         query, params = super(WinnowSql, self).prepare_query(temp_data, ctx)
