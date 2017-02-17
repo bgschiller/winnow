@@ -1,7 +1,7 @@
 import default_operators
 from error import WinnowError
 
-from templating import render_template, SqlFragment
+from templating import WinnowSql, SqlFragment
 
 def sql_type(value_type):
     if value_type in ('absolute_date', 'relative_date'):
@@ -16,44 +16,45 @@ def where_clause(column, op, value):
 
     Expects a column, operator, and a value.
     """
+    w = WinnowSql()
     if op['value_type'] == 'nullable':
-        return render_template(
+        return w.prepare_query(
             '{{ column | sqlsafe }} IS {{ maybe_not | sqlsafe }} NULL',
             column=column,
             maybe_not=' NOT' if value else '')
     elif op['value_type'] == 'absolute_date':
-        return render_template(
+        return w.prepare_query(
             '''({{ column | sqlsafe }} {{ bin_op | sqlsafe }} {{ value  }})''',
             column=column,
             bin_op=default_operators.get_sql_binary_op(op['name']),
             value=value)
     elif op['value_type'] == 'collection':
-        return render_template(
+        return w.prepare_query(
             '''({{column | sqlsafe }} {{ maybe_not | sqlsafe }} IN {{ value | inclause }} )''',
             column=column,
             value=value,
             maybe_not='NOT' if op['negative'] else '')
     elif op['value_type'] == 'bool':
-        return render_template(
+        return w.prepare_query(
             '''({{ maybe_not | sqlsafe }} {{ column |sqlsafe }})''',
             column=column,
             maybe_not='' if value else 'NOT ')
     elif op['value_type'] == 'numeric':
-        return render_template('''({{ column | sqlsafe }} {{ bin_op | sqlsafe }} {{ value  }})''',
+        return w.prepare_query('''({{ column | sqlsafe }} {{ bin_op | sqlsafe }} {{ value  }})''',
             column=column,
             bin_op=default_operators.get_sql_binary_op(op['name']),
             value=value)
     elif op['value_type'] == 'string':
         if op['name'] == 'contains':
-            return render_template(
+            return w.prepare_query(
             '''({{ column | sqlsafe }} ILIKE '%%' || {{ value }} || '%%')''',
                 column=column, value=value)
         elif op['name'] == 'starts with':
-            return render_template(
+            return w.prepare_query(
                 '''({{ column | sqlsafe }} ILIKE {{ value }} || '%%')''',
                 column=column,
                 value=value)
-        return render_template(
+        return w.prepare_query(
             '''({{ column | sqlsafe }} {{ bin_op | sqlsafe }} {{ value }}
             {% if op_name == 'is' and value == '' %}
                 {# \begin{hack}
@@ -69,14 +70,14 @@ def where_clause(column, op, value):
     elif op['value_type'] == 'string_length':
         if op['name'] == 'more than __ words':
             regex = '(\S+\s+){' +  str(int(value)) + '}\S+$'
-            return render_template(
+            return w.prepare_query(
                 '''({{ column | sqlsafe }} ~ {{ regex | sqlsafe }} )''',
                                      column=column, regex=regex)
         elif op['name'] == 'fewer than __ words':
             if value <= 0:
                 return '({column} IS NULL)'.format(column=column)
             regex = '^(\S+\s+){0,' + str(int(value) - 1) + '}\S*$'
-            return render_template('''({{column}} ~ {{ regex | sqlsafe }})''',
+            return w.prepare_query('''({{column}} ~ {{ regex | sqlsafe }})''',
                                    column=column, regex=regex)
     else:
         raise WinnowError("Unknown operator type '{}'".format(op['value_type']))

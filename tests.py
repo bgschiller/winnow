@@ -29,8 +29,8 @@ def test_basic():
     query, params = ice_cream_winnow.query(ice_cream_filt)
     expected = '''
     SELECT * FROM ice_cream
-    WHERE (
-        (flavor = %s ) OR
+    WHERE
+       ((flavor = %s ) OR
         ((num_scoops >= %s) AND (flavor = %s )))'''
 
     assert_equals(squish_ws(query), squish_ws(expected))
