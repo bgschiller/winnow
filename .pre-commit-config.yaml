@@ -1,5 +1,5 @@
 -   repo: git@github.com:bgschiller/pre-commit-hooks
-    sha: d2f5c4ebb94d5d39f7fdb7cb1eb6451a1f375577
+    sha: 1877870787b800752102ea9262697c81394c79f3
     hooks:
     -   id: check-merge-conflict
     -   id: trailing-whitespace
