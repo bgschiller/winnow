@@ -25,21 +25,21 @@ sources = [
 @Winnow.special_case('More Scoops than Avg', 'bool')
 def more_scoops_than_avg(wnw, clause):
     return wnw.prepare_query(
-        '''
+        squish_ws('''
         num_scoops
         {% if yes_more %} > {% else %} <= {% endif %}
         (SELECT AVG(num_scoops) FROM ice_cream)
-        ''',
+        '''),
         yes_more=clause['value_vivified'])
 
 
 @Winnow.special_case('Number Scoops', 'nullable')
 def number_scoops_nullable(wnw, clause):
     return wnw.prepare_query(
-        '''
+        squish_ws('''
         NULLIF(num_scoops, 0)
         {% if is_set %} IS NOT NULL {% else %} IS NULL {% endif %}
-        ''',
+        '''),
         is_set=clause['value_vivified'])
 
 ice_cream_winnow = Winnow('ice_cream', sources)
@@ -98,7 +98,7 @@ special_filt = dict(
 
 def test_special_case():
     query, params = ice_cream_winnow.where_clauses(special_filt)
-    expected = '(num_scoops > (SELECT AVG(num_scoops) FROM ice_cream))'
+    expected = '(num_scoops  >  (SELECT AVG(num_scoops) FROM ice_cream))'
 
     assert_equals(query, expected)
     assert_equals(params, ())
@@ -116,7 +116,7 @@ overridden_operator_filt = dict(
 
 def test_special_case_override():
     query, params = ice_cream_winnow.where_clauses(overridden_operator_filt)
-    expected = '(NULLIF(num_scoops, 0) IS NOT NULL)'
+    expected = '(NULLIF(num_scoops, 0)  IS NOT NULL )'
 
     assert_equals(query, expected)
     assert_equals(params, ())

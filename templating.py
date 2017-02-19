@@ -11,7 +11,6 @@ from jinja2.utils import Markup
 from jinjasql.core import _bind_param
 from jinjasql.core import _thread_local
 
-from utils import squish_ws
 
 # Replace the bind function to support more types.
 def _better_bind(value, name):
@@ -78,7 +77,7 @@ class WinnowSql(jinjasql.JinjaSql):
 
     def prepare_query(self, temp_data, **ctx):
         query, params = super(WinnowSql, self).prepare_query(temp_data, ctx)
-        return SqlFragment(squish_ws(query), params)
+        return SqlFragment(query, params)
 
 
 def json_custom_parser(obj):
