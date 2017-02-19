@@ -1,0 +1,11 @@
+-   repo: git@github.com:bgschiller/pre-commit-hooks
+    sha: d2f5c4ebb94d5d39f7fdb7cb1eb6451a1f375577
+    hooks:
+    -   id: check-merge-conflict
+    -   id: trailing-whitespace
+    -   id: debug-statements
+    -   id: flake8
+-   repo: git@github.com:asottile/reorder_python_imports
+    sha: 3d86483455ab5bd06cc1069fdd5ac57be5463f10
+    hooks:
+    -   id: reorder-python-imports
