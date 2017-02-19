@@ -1,14 +1,17 @@
 from __future__ import unicode_literals
-import decimal
+
 import datetime
+import decimal
 import json
 from collections import Iterable
 
-import jinjasql
 import jinja2
+import jinjasql
 from jinja2.utils import Markup
-from jinjasql.core import _bind_param, _thread_local
+from jinjasql.core import _bind_param
+from jinjasql.core import _thread_local
 
+from utils import squish_ws
 
 # Replace the bind function to support more types.
 def _better_bind(value, name):
@@ -75,7 +78,7 @@ class WinnowSql(jinjasql.JinjaSql):
 
     def prepare_query(self, temp_data, **ctx):
         query, params = super(WinnowSql, self).prepare_query(temp_data, ctx)
-        return SqlFragment(query, params)
+        return SqlFragment(squish_ws(query), params)
 
 
 def json_custom_parser(obj):

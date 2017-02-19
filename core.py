@@ -1,13 +1,16 @@
 from __future__ import unicode_literals
+
+import copy
 import json
 import warnings
-import copy
 
-from error import WinnowError, WinnowWarning
-import values
 import default_operators
 import sql_prepare
+import values
+from error import WinnowError
+from error import WinnowWarning
 from templating import SqlFragment
+from templating import WinnowSql
 
 class Winnow(object):
     """
@@ -19,9 +22,18 @@ class Winnow(object):
     # static value we have to deep copy it to every subclass.
     _special_cases = {}
 
+    sql_class = WinnowSql
+
     def __init__(self, table, sources):
         self.table = table
         self.sources = sources
+        self.sql = self.sql_class()
+
+    def prepare_query(self, *args, **kwargs):
+        """
+        Proxy to self.sql
+        """
+        return self.sql.prepare_query(*args, **kwargs)
 
     def resolve(self, filt):
         """
@@ -252,12 +264,11 @@ class Winnow(object):
                 raise WinnowError('failed to resolve component: {}'.format(k))
 
         op = clause['operator_resolved']
-        ds = clause['data_source_resolved']
 
         special_handler = self.special_case_handler(
-            value_type=op['value_type'],
-            source_name=clause['data_source'])
-        if special_handler is not None and ds['source_type'] in ('special', 'standard'):
+            source_name=clause['data_source'],
+            value_type=op['value_type'])
+        if special_handler is not None:
             return special_handler(self, clause)
 
         return self._default_clause(clause)
@@ -275,7 +286,7 @@ class Winnow(object):
         return self.where_clause(ds['column'], op, value)
 
     @classmethod
-    def special_case(cls, value_type, source_name):
+    def special_case(cls, source_name, *value_types):
         """
         Register a special case handler. A special case handler is a function s:
          s(Winnow(), clause) -> WHERE clause string
@@ -290,15 +301,16 @@ class Winnow(object):
             """
             Register a function in the handler table.
             """
-            if (value_type, source_name) in cls._special_cases:
-                raise WinnowError("Conflicting handlers registered for ({},{}): {} and {}".format(
-                    value_type, source_name,
-                    cls._special_cases[(value_type, source_name)].__name__, func.__name__))
-            cls._special_cases[(value_type, source_name)] = func
+            for value_type in value_types:
+                if (source_name, value_type) in cls._special_cases:
+                    raise WinnowError("Conflicting handlers registered for ({},{}): {} and {}".format(
+                        value_type, source_name,
+                        cls._special_cases[(source_name, value_type)].__name__, func.__name__))
+                cls._special_cases[(source_name, value_type)] = func
             return func
         return decorator
 
-    def special_case_handler(self, value_type, source_name):
+    def special_case_handler(self, source_name, value_type):
         """
         Check if a given value_type, source_name pair has
         a special case handler.
@@ -306,4 +318,4 @@ class Winnow(object):
         :return: A function handler for that case accepting
          the winnow instance and the clause.
         """
-        return self._special_cases.get((value_type, source_name))
+        return self._special_cases.get((source_name, value_type))
