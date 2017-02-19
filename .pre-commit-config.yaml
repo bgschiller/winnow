@@ -6,6 +6,6 @@
     -   id: debug-statements
     -   id: flake8
 -   repo: git@github.com:asottile/reorder_python_imports
-    sha: 3d86483455ab5bd06cc1069fdd5ac57be5463f10
+    sha: 9aa4d08f9a28d3defc5e4db3c3b77d1a9980fd1a
     hooks:
     -   id: reorder-python-imports
