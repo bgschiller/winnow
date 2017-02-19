@@ -32,9 +32,17 @@ def more_scoops_than_avg(wnw, clause):
         ''',
         yes_more=clause['value_vivified'])
 
+
+@Winnow.special_case('Number Scoops', 'nullable')
+def number_scoops_nullable(wnw, clause):
+    return wnw.prepare_query(
+        '''
+        NULLIF(num_scoops, 0)
+        {% if is_set %} IS NOT NULL {% else %} IS NULL {% endif %}
+        ''',
+        is_set=clause['value_vivified'])
+
 ice_cream_winnow = Winnow('ice_cream', sources)
-
-
 
 ice_cream_filt = dict(
     logical_op='&',
@@ -96,5 +104,19 @@ def test_special_case():
     assert_equals(params, ())
 
 
+overridden_operator_filt = dict(
+    logical_op='&',
+    filter_clauses=[
+        dict(
+            data_source='Number Scoops',
+            operator='is set',
+            value=True)
+    ]
+)
+
 def test_special_case_override():
-    pass
+    query, params = ice_cream_winnow.where_clauses(overridden_operator_filt)
+    expected = '(NULLIF(num_scoops, 0) IS NOT NULL)'
+
+    assert_equals(query, expected)
+    assert_equals(params, ())
