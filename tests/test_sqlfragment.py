@@ -2,13 +2,6 @@ from nose.tools import assert_equals
 
 from templating import SqlFragment
 
-def test_sqlfragments_can_be_composed():
-    """
-    Including a SqlFragment in a template includes all of it's
-    parameters.
-    """
-
-
 a = SqlFragment('once upon a %s %s', ('midnight', 'dreary'))
 b = SqlFragment(' while I pondered, %s and %s', ('weak', 'weary'))
 c = SqlFragment(
