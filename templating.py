@@ -116,14 +116,12 @@ class pg_null(object):
 class SqlFragment(object):
     """
     A wrapper around (query, params) that supports addition
-
-    Does this thing count as a monad?
     """
     def __init__(self, query, params):
         self.query = query
         self.params = params
 
-    def __add___(self, other):
+    def __add__(self, other):
         return SqlFragment(
             query=self.query + other.query,
             params=self.params + other.params)
@@ -135,6 +133,18 @@ class SqlFragment(object):
             `query, params = fragment`
         """
         return iter((self.query, self.params))
+
+    def __eq__(self, other):
+        return self.query == other.query and self.params == other.params
+
+
+    def __repr__(self):
+        return '{}({}, {})'.format(
+            self.__class__.__name__,
+            repr(self.query),
+            repr(self.params))
+
+    __str__ = __unicode__ = __repr__
 
     @staticmethod
     def join(sep, elems):
