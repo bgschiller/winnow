@@ -27,4 +27,7 @@ Over many a %s and %s volume of %s lore,''',
     assert_equals(result, expected)
 
 def test_unpack_sqlfragment():
-    pass
+    for sql_frag in (a, b, c):
+        query, params = sql_frag
+        assert_equals(query, sql_frag.query)
+        assert_equals(params, sql_frag.params)
