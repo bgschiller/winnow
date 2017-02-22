@@ -1,5 +1,7 @@
 import datetime as dt
-from datetime import timedelta, datetime
+from datetime import datetime
+from datetime import timedelta
+
 from error import WinnowError
 
 valid_rel_date_values = (

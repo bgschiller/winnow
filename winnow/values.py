@@ -15,15 +15,14 @@ To vivify is to turn from a string representation into a
 To stringify is to serialize. This would be like turning the
  list [1, 2, 3] into the JSON string "[1,2,3]"
 '''
-
 from __future__ import unicode_literals
+
+import json
+from datetime import datetime
 from operator import itemgetter
 
-from error import WinnowError
-
 from dateutil.parser import parse as parse_date
-from datetime import datetime
-import json
+from error import WinnowError
 from relative_dates import valid_rel_date_values
 
 # TODO : Since we're storing filters denormalized as JSON now, we probably need
