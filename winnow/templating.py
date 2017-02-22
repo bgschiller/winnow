@@ -95,7 +95,7 @@ def json_custom_parser(obj):
 
 
 def jsonify(obj):
-    return json.dumps(obj, default=json_custom_parser)
+    return json.dumps(obj, default=json_custom_parser, sort_keys=True)
 
 
 class PGJson(object):
