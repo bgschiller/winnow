@@ -31,8 +31,8 @@ def test_pg_null_includes_type():
         'SELECT {{ int_null }}, {{ text_null }}',
         int_null=pg_null('int'),
         text_null=pg_null('text'))
-    assert_equals(query, 'SELECT NULL::int, NULL::text')
-    assert_equals(params, [])
+    assert_equals(query, 'SELECT %s::int, %s::text')
+    assert_equals(params, [None, None])
 
 blobject = {
     'a':12,
@@ -57,7 +57,11 @@ def test_lists_and_dicts_produce_jsonb():
 
 
 def test_none_and_undefined_produce_null():
-    pass
+    query, params = sql.prepare_query(
+        'SELECT {{ nada }}, {{ no_se }}',
+        nada=None)
+    assert_equals(query, 'SELECT %s, %s')
+    assert_equals(params, [None, None])
 
 def test_jsonify_works_on_dates():
     pass

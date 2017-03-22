@@ -29,7 +29,8 @@ def _better_bind(value, name):
         # return the sql unchanged
         return value.query
     elif isinstance(value, pg_null):
-        return value
+        suffix = '::' + value.pg_type
+        value = None
     if isinstance(value, (list, dict, PGJson)):
         suffix = '::jsonb'
         value = jsonify(getattr(value, 'adapted', value))
