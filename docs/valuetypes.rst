@@ -90,7 +90,7 @@ Absolute date values are ISO8601 strings, like ``"2017-03-22T18:14:30"``. The su
 relative_date
 ^^^^^^^^^^^^^
 
-Relative date values are also strings, but they're things like ``"last_30_days"`` and ``"current_month"``. I'm not very happy with how these are designed, so please open an issue if you have advice. They will likely change in a future version.
+Relative date values are also strings, but they're things like ``"last_30_days"`` and ``"current_month"``. I'm not very happy with how these are designed, so they will likely change in a future version. Please let me know if you have any advice. Maybe there's already a standard way to refer to intervals of time that aren't anchored to a particular day?
 
 .. code-block:: python
 
@@ -99,3 +99,5 @@ Relative date values are also strings, but they're things like ``"last_30_days"`
         'operator': 'within',
         'value': 'last_7_days',
     }
+
+The list of available values is found in `relative_dates.py <https://github.com/bgschiller/winnow/blob/master/winnow/relative_dates.py>`_.
