@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='winnow-filters',
-    packages=['winnow-filters'],
+    packages=['winnow'],
     version='0.0.1',
     description='Winnow is a framework for server-side filtering of data.',
     author='Brian Schiller',
