@@ -3,7 +3,7 @@ Winnow
 
 Winnow is a framework for server-side filtering of data. It is designed to be expressive, extensible, and fast. Winnow's inputs look something like this:
 
-.. code-block json
+.. code-block:: json
     {
         "logical_op": "&",
         "filter_clauses": [
@@ -26,6 +26,6 @@ Winnow is a framework for server-side filtering of data. It is designed to be ex
 
 Winnow's outputs look something like this:
 
-.. code-block python
+.. code-block:: python
     "WHERE created_date < %s::timestamp AND owner_id = ANY(VALUES (%s),(%s),(%s))",
     ('2015-03-01', 23, 41, 90)
