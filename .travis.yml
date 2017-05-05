@@ -1,0 +1,11 @@
+language: python
+script: cd winnow && python -m nose tests/
+deploy:
+  provider: pypi
+  user: bgschiller
+  password:
+    secure: C523xj970ycqECMZBMnxmGzZPDxW4vOCVP5nQFstRkZ/9A9uSIOW2InAOCBwLZTV5IRPNGJP6soxcpggYfQ8hKg9x5q6lnNTGbRLz1TYrTerIZG7AhXArlzUyxDmksaCyleJNxxEICVInYZG44QMh5OmW4hQ7oaSjZ6ByrbKdpvokxrezJVKohZfBAckIQY4Blaac92esmggVAqMIilcNuTMl/ODxrh0Ekm4+bFv5+36eRC7gdtQXJfcfg5fqIkxO6oEU9tKU6OM0xC2OaVJRJOWZ++lVfkSgS/Jxq2B+SrCDE2FKuB4R0frx9ogMFS/Fj/iHF27DJEp842qp4FsDsTJY8zAUTpietlCAXTbQRxYj4R2iJ6UJWXCbXHIT1d/ej/P7UeZYtEHtWZjtmBEGRIrC3bMIBqEkEukCHl4/YO0ntZWh+sGNJg0kyAP47UOkxSNSDr88tVMIucL1yIL8iZlm626YrcXBhDncOhCoqK06x/BBheTcx3RvzVeAy87fmFpItZfAsimfWBxGc7NfoDpQ5WxGzqUkxjxyWKD80ndHy3l4CXS4lyqS7zb0+KJDOhyfkyugTnQEqHGOCUdfDFRlOgzaajEJZIYnrBcwspVbbhgLcSvwS9Olgj2XJNGBF1ikbpZOhaXHrODx/iYgRtOBRGeTLczILIRtFibkqw=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    repo: bgschiller/winnow
