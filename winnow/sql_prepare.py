@@ -1,6 +1,6 @@
-import default_operators
-from error import WinnowError
-from templating import WinnowSql
+from . import default_operators
+from .error import WinnowError
+from .templating import WinnowSql
 
 def sql_type(value_type):
     if value_type in ('absolute_date', 'relative_date'):

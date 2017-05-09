@@ -22,8 +22,9 @@ from datetime import datetime
 from operator import itemgetter
 
 from dateutil.parser import parse as parse_date
-from error import WinnowError
-from relative_dates import valid_rel_date_values
+
+from .error import WinnowError
+from .relative_dates import valid_rel_date_values
 
 # TODO : Since we're storing filters denormalized as JSON now, we probably need
 # Less of this crazy vivification stuff. For another day, perhaps.

@@ -4,13 +4,13 @@ import copy
 import json
 import warnings
 
-import default_operators
-import sql_prepare
-import values
-from error import WinnowError
-from error import WinnowWarning
-from templating import SqlFragment
-from templating import WinnowSql
+from . import default_operators
+from . import sql_prepare
+from . import values
+from .error import WinnowError
+from .error import WinnowWarning
+from .templating import SqlFragment
+from .templating import WinnowSql
 
 class Winnow(object):
     """

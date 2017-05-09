@@ -1,1 +1,1 @@
-from core import Winnow  # noqa
+from .core import Winnow  # noqa

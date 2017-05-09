@@ -2,7 +2,7 @@ import datetime as dt
 from datetime import datetime
 from datetime import timedelta
 
-from error import WinnowError
+from .error import WinnowError
 
 valid_rel_date_values = (
     "last_full_week",
