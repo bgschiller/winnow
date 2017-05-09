@@ -22,6 +22,7 @@ from datetime import datetime
 from operator import itemgetter
 
 from dateutil.parser import parse as parse_date
+from six import string_types
 
 from .error import WinnowError
 from .relative_dates import valid_rel_date_values
@@ -52,7 +53,7 @@ def vivify_collection(value):
         if not isinstance(value, list):
             value = json.loads(value)
         assert isinstance(value, list), "collection values must be lists"
-        assert all(isinstance(v, (dict, basestring)) for v in value), "elements of collection must be dicts (or strings, for backwards compat)"
+        assert all(isinstance(v, (dict, string_types)) for v in value), "elements of collection must be dicts (or strings, for backwards compat)"
         if value and isinstance(value[0], dict):  # backwards compat check.
             value = map(itemgetter('id'), value)
         return value
@@ -98,7 +99,7 @@ def vivify_absolute_date(value):
         raise WinnowError("invalid literal for date range: '{}'".format(value))
 
 def vivify_bool(value):
-    if isinstance(value, basestring) and value.lower() in ('true', 'false'):
+    if isinstance(value, string_types) and value.lower() in ('true', 'false'):
         return value.lower() == 'true'
     else:
         assert isinstance(value, bool), "expected boolean or string. received '{}'".format(value)

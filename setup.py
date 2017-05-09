@@ -20,5 +20,6 @@ setup(
     install_requires=[
         'jinjasql',
         'python-dateutil',
+        'six',
     ],
 )

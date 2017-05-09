@@ -1,2 +1,3 @@
 jinjasql==0.1.6
 python-dateutil==2.6.0
+six==1.10.0

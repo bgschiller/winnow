@@ -10,6 +10,7 @@ import jinjasql
 from jinja2.utils import Markup
 from jinjasql.core import _bind_param
 from jinjasql.core import _thread_local
+from six import string_types
 
 
 # Replace the bind function to support more types.
@@ -86,7 +87,7 @@ def json_custom_parser(obj):
     A custom json parser to handle json.dumps calls properly for Decimal and
     Datetime data types.
     """
-    if not isinstance(obj, basestring) and isinstance(obj, Iterable):
+    if not isinstance(obj, string_types) and isinstance(obj, Iterable):
         return list(obj)
     elif isinstance(obj, datetime.datetime) or isinstance(obj, datetime.date):
         dot_ix = 19  # 'YYYY-MM-DDTHH:MM:SS.mmmmmm+HH:MM'.find('.')

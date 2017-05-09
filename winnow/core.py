@@ -4,6 +4,8 @@ import copy
 import json
 import warnings
 
+from six import string_types
+
 from . import default_operators
 from . import sql_prepare
 from . import values
@@ -49,7 +51,7 @@ class Winnow(object):
         if filt['logical_op'] not in '&|':
             raise WinnowError("Logical op must be one of &, |. Given: {}".format(
                 filt['logical_op']))
-        for ix in xrange(len(filt['filter_clauses'])):
+        for ix in range(len(filt['filter_clauses'])):
             try:
                 filt['filter_clauses'][ix] = self.resolve_clause(
                     filt['filter_clauses'][ix])
@@ -149,7 +151,7 @@ class Winnow(object):
     @classmethod
     def stringify(cls, value_type, value):
         cvt = cls.coalesce_value_type(value_type)
-        if isinstance(value, basestring):
+        if isinstance(value, string_types):
             value = cls.vivify(value_type, value)
 
         if cvt == 'string':
@@ -174,7 +176,7 @@ class Winnow(object):
         '''Given an operator name, return an Op object.
 
         Raise an error if the operator is not found'''
-        if not isinstance(op_name, basestring):
+        if not isinstance(op_name, string_types):
             raise WinnowError("Bad operator type, '{}'. expected string".format(type(op_name)))
         op_name = op_name.lower()
         matches = [op for op in self.operators
