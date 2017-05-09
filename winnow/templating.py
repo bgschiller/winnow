@@ -32,7 +32,7 @@ def _better_bind(value, name):
     elif isinstance(value, pg_null):
         suffix = '::' + value.pg_type
         value = None
-    if isinstance(value, (list, dict, PGJson)):
+    if isinstance(value, (dict, PGJson)):
         suffix = '::jsonb'
         value = jsonify(getattr(value, 'adapted', value))
     elif isinstance(value, datetime.datetime):

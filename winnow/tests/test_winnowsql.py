@@ -48,7 +48,7 @@ def test_pg_json_produces_jsonb():
     assert_equals(query, 'SELECT %s::jsonb')
     assert_equals(params, [jsonify(blobject)])
 
-def test_lists_and_dicts_produce_jsonb():
+def test_dicts_produce_jsonb():
     query, params = sql.prepare_query(
         'SELECT {{ vals }}',
         vals=blobject)
@@ -66,8 +66,12 @@ def test_none_and_undefined_produce_null():
 def test_jsonify_works_on_dates():
     pass
 
-def test_pg_array_filter():
-    pass
+def test_lists_create_arrays():
+    query, params = sql.prepare_query(
+        "SELECT 'apple' = ANY({{ vals }})",
+        vals=['peach', 'coconut', 'banana'])
+    assert_equals(query, "SELECT 'apple' = ANY(%s)")
+    assert_equals(params, [['peach', 'coconut', 'banana']])
 
 def test_pg_array_on_empty_list():
     pass

@@ -1,6 +1,7 @@
-from core import Winnow
 from nose.tools import assert_equals
-from utils import squish_ws
+
+from ..core import Winnow
+from ..utils import squish_ws
 
 sources = [
     dict(display_name='Number Scoops', column='num_scoops',
