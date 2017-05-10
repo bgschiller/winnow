@@ -79,7 +79,7 @@ class WinnowSql(jinjasql.JinjaSql):
 
     def prepare_query(self, temp_data, **ctx):
         query, params = super(WinnowSql, self).prepare_query(temp_data, ctx)
-        return SqlFragment(query, params)
+        return SqlFragment(query, list(params))
 
 
 def json_custom_parser(obj):
