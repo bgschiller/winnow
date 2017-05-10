@@ -25,7 +25,7 @@ def _better_bind(value, name):
         return value
     elif isinstance(value, SqlFragment):
         # Copy in the params from the child fragment in order
-        for ix, param in value.params:
+        for ix, param in enumerate(value.params):
             _thread_local.bind_params['{}#param#{}'.format(name, ix)] = param
         # return the sql unchanged
         return value.query
