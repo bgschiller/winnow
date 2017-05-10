@@ -207,10 +207,10 @@ class Winnow(object):
         return source, operator
 
     def query(self, filt):
-        frag = self.where_clauses(filt)
-        return "SELECT * FROM {} WHERE {}".format(
-            self.table,
-            frag.query), frag.params
+        return self.prepare_query(
+            "SELECT * FROM {{ table | sqlsafe }} WHERE {{ condition }}",
+            table=self.table,
+            condition=self.where_clauses(filt))
 
     def strip(self, filt):
         """
