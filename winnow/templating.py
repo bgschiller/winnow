@@ -28,7 +28,7 @@ def _better_bind(value, name):
         for ix, param in enumerate(value.params):
             _thread_local.bind_params['{}#param#{}'.format(name, ix)] = param
         # return the sql unchanged
-        return value.query
+        return Markup(value.query)
     elif isinstance(value, pg_null):
         suffix = '::' + value.pg_type
         value = None

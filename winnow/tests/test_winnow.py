@@ -61,7 +61,7 @@ def test_basic():
     WHERE ((num_scoops >= %s) AND (flavor IN (%s,%s) ))'''
 
     assert_equals(squish_ws(query), squish_ws(expected))
-    assert_equals(params, (2, 'Strawberry', 'Chocolate'))
+    assert_equals(params, [2, 'Strawberry', 'Chocolate'])
 
 
 nested_filt = dict(

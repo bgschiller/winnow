@@ -81,3 +81,18 @@ def test_sqlfragments_can_be_composed():
     Including a SqlFragment in a template includes all of it's
     parameters.
     """
+    servings_check = sql.prepare_query(
+        'num_servings >= {{ people }}',
+        people=12)
+    time_check = sql.prepare_query(
+        "cook_time <= interval ({{ max_time_in_minutes }} || ' minute')",
+        max_time_in_minutes=100)
+    recipe_requirements = sql.prepare_query(
+        '{{ servings_check}} AND {{ time_check }}',
+        servings_check=servings_check, time_check=time_check)
+    assert_equals(
+        recipe_requirements.query,
+        "num_servings >= %s AND cook_time <= interval (%s || ' minute')")
+    assert_equals(
+        recipe_requirements.params,
+        [12, 100])
