@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import copy
 import json
-import warnings
 
 from six import string_types
 
@@ -10,7 +9,6 @@ from . import default_operators
 from . import sql_prepare
 from . import values
 from .error import WinnowError
-from .error import WinnowWarning
 from .templating import SqlFragment
 from .templating import WinnowSql
 
@@ -52,12 +50,8 @@ class Winnow(object):
             raise WinnowError("Logical op must be one of &, |. Given: {}".format(
                 filt['logical_op']))
         for ix in range(len(filt['filter_clauses'])):
-            try:
-                filt['filter_clauses'][ix] = self.resolve_clause(
-                    filt['filter_clauses'][ix])
-            except WinnowError as e:
-                warnings.warn('Error resolving clause: "{}". clause was {}'.format(
-                    e, filt['filter_clauses'][ix]).encode('ascii', 'xmlcharrefreplace'), WinnowWarning)
+            filt['filter_clauses'][ix] = self.resolve_clause(
+                filt['filter_clauses'][ix])
         return filt
 
     def validate(self, filt):
@@ -230,7 +224,7 @@ class Winnow(object):
         in a SELECT statement on the opportunity table.
         '''
         if not filt['filter_clauses']:
-            return '(1=1)'  # Match everything by SQL-injecting ourselves.
+            return True
 
         filt = self.resolve(filt)
         where_clauses = []
@@ -241,12 +235,13 @@ class Winnow(object):
             elif 'data_source_resolved' in clause:
                 where_clauses.append(self._dispatch_clause(clause))
             else:
-                # data source or operator failed to resolve, but we already
-                # logged out a warning.
-                pass
+                # I don't expect to ever get here, because we should hit this
+                # issue when we call `filt = self.resolve(filt)`
+                raise WinnowError("Somehow, this is neither a nested filter, nor a resolved clause")
+
 
         if not where_clauses:
-            return '(1=1)'
+            return True
 
         sep = '\nAND \n  ' if filt['logical_op'] == '&' else '\nOR \n  '
         self.strip(filt)
