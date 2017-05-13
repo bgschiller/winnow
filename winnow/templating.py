@@ -53,7 +53,7 @@ def _anyclause(str_list):
     """
     values = list(str_list)
     if not len(values):
-        return u"(NULL)"
+        return "(NULL)"
 
     results = []
     for v in values:
