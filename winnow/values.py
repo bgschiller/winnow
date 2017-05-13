@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 
 import json
 from datetime import datetime
-from operator import itemgetter
 
 from dateutil.parser import parse as parse_date
 from six import string_types
@@ -55,7 +54,7 @@ def vivify_collection(value):
         assert isinstance(value, list), "collection values must be lists"
         assert all(isinstance(v, (dict, string_types)) for v in value), "elements of collection must be dicts (or strings, for backwards compat)"
         if value and isinstance(value[0], dict):  # backwards compat check.
-            value = map(itemgetter('id'), value)
+            value = [v['id'] for v in value]
         return value
     except (ValueError, AssertionError) as e:
         raise WinnowError(e)

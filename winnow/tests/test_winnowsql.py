@@ -1,10 +1,11 @@
 import datetime
 
 from nose.tools import assert_equals
-from templating import jsonify
-from templating import pg_null
-from templating import PGJson
-from templating import WinnowSql
+
+from ..templating import jsonify
+from ..templating import pg_null
+from ..templating import PGJson
+from ..templating import WinnowSql
 
 sql = WinnowSql()
 

@@ -213,7 +213,7 @@ class Winnow(object):
         for k in ('data_source_resolved', 'operator_resolved', 'value_vivified'):
             filt.pop(k, None)
         if 'filter_clauses' in filt:
-            filt['filter_clauses'] = map(self.strip, filt['filter_clauses'])
+            filt['filter_clauses'] = [self.strip(f) for f in filt['filter_clauses']]
         return filt
 
     def where_clauses(self, filt):

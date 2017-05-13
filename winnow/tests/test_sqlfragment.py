@@ -1,5 +1,6 @@
 from nose.tools import assert_equals
-from templating import SqlFragment
+
+from ..templating import SqlFragment
 
 a = SqlFragment('once upon a %s %s', ('midnight', 'dreary'))
 b = SqlFragment(' while I pondered, %s and %s', ('weak', 'weary'))
