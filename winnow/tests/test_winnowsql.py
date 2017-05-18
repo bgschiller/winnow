@@ -65,7 +65,12 @@ def test_none_and_undefined_produce_null():
     assert_equals(params, [None, None])
 
 def test_jsonify_works_on_dates():
-    pass
+    json_w_date = {'today': datetime.datetime(2017, 5, 18, 21, 30)}
+    query, params = sql.prepare_query(
+        'SELECT {{ json_w_date }}',
+        json_w_date=json_w_date)
+    assert_equals(query, 'SELECT %s::jsonb')
+    assert_equals(params, [jsonify(json_w_date)])
 
 def test_lists_create_arrays():
     query, params = sql.prepare_query(
