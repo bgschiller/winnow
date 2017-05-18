@@ -64,18 +64,12 @@ def _anyclause(str_list):
     return clause
 
 
-def _pg_array(lst):
-    return 'array[' + ', '.join(
-        _bind_param(_thread_local.bind_params, 'pg_array', v)
-        for v in lst) + ']'
-
 
 class WinnowSql(jinjasql.JinjaSql):
     def __init__(self, *args, **kwargs):
         super(WinnowSql, self).__init__(*args, **kwargs)
         self.env.filters['bind'] = _better_bind
         self.env.filters['anyclause'] = _anyclause
-        self.env.filters['pg_array'] = _pg_array
 
     def prepare_query(self, temp_data, **ctx):
         query, params = super(WinnowSql, self).prepare_query(temp_data, ctx)

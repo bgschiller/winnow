@@ -79,9 +79,6 @@ def test_lists_create_arrays():
     assert_equals(query, "SELECT 'apple' = ANY(%s)")
     assert_equals(params, [['peach', 'coconut', 'banana']])
 
-def test_pg_array_on_empty_list():
-    pass
-
 def test_sqlfragments_can_be_composed():
     """
     Including a SqlFragment in a template includes all of it's
