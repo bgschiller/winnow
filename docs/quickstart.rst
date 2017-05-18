@@ -4,9 +4,12 @@ Quickstart
 Installation
 ------------
 
-Winnow is available from PyPI (I mean, it's not right now, but it will be).
+Winnow is available from PyPI as winnow-filters. I've been having some trouble downloading it from there though -- I'm new to PyPI and it may be set up wrong. In the meantime, it can be installed with
 
-# TODO upload to PyPI and update the docs here.
+.. code-block:: bash
+
+    pip install git+git://github.com/bgschiller/winnow.git@master
+
 
 Define your Sources
 -------------------

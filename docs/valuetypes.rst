@@ -1,7 +1,11 @@
 Value Types and Operators
 =========================
 
-The existing value types and operators can be easily extended by subclassing Winnow.
+A value type corresponds to the shape of the ``value`` key in a filter. It might be numeric (``3``), or string (``Mad-Eye Moody``) or relative_date (``last_7_days``). Each operator specifes the unique value type it operates on. Each data_source can list any number of value types it will support.
+
+For example, "Order Date" source from our quickstart example lists that it supports both relative_date and absolute_date. The values for relative_date look like ``last_month`` or ``next_7_days``. The values for absolute_date look like ``2017-05-18T12:30``. Because both absolute\_ and relative_date value_types are supported for "Order Date", we can use the relative_date operators (``within`` and ``outside of``) as well as the absolute_date operators (``before`` and ``after``).
+
+The existing value types and operators can be easily extended by subclassing Winnow. We will see out to do this in :ref:`extending_winnow`.
 
 numeric
 -------
