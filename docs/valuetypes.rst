@@ -1,3 +1,5 @@
+.. _valuetypes:
+
 Value Types and Operators
 =========================
 
