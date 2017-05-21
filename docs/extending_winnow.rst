@@ -92,6 +92,113 @@ That will work much better! You can see an example of how this works in `recipe_
 Adding Operators
 ----------------
 
+When searching recipes, it makes sense to ask for recipes that use *all of* a list of ingredients. We can accomplish that right now, but it's a bit awkward.
+
+.. code-block json
+
+    {
+        "logical_op": "&",
+        "filter_clauses": [
+            {
+                "data_source": "Ingredients",
+                "operator": "any of",
+                "value": ["Tomato"]
+            },
+            {
+                "data_source": "Ingredients",
+                "operator": "any of",
+                "value": ["Basil"]
+            },
+            {
+                "data_source": "Ingredients",
+                "operator": "any of",
+                "value": ["Mozzarella"],
+            }
+        ]
+    }
+
+That's pretty painful to write. If your UI mirrors our json structure, it could be difficult for users to discover how to create a filter like that. Let's create an operator to handle this case.
+
+First, we'll need to make a value type. We could piggyback on the 'collection' value type, but other collections don't necessarily know how to handle an 'all of' operator. For example, imagine we had a data source that was a star rating between 1 and 5. It wouldn't make sense to say "Rating is all of [3, 4]". By making a specific value type, we can allow each data source to decide whether or not to permit this operator. Let's call it 'collection_any'.
+
+Now we'll add the operator to Winnow's list.
+
+.. code-block python
+
+    class RecipeWinnow(Winnow):
+
+        operators = Winnow.operators + [
+            {
+                'name': 'all of',
+                'value_type': 'collection_all',
+                'negative': False
+            },
+        ]
+
+We'll also need to specify that the Ingredients data_source supports 'collection_any'.
+
+.. code-block :: json
+
+    // source definition
+    {
+       "display_name": "Ingredients",
+       "column": "ingredient",
+       "value_types": ["collection", "collection_any"]
+    }
+
+Finally, we need to provide instructions for building SQL to answer that query. Let's do that using a special case handler to begin with, but we'll revisit this decision in another section.
+
+.. code-block :: python
+
+    @RecipeWinnow.special_case('Ingredients', 'collection_any')
+    def ingredients(rw, clause):
+        return rw.sql.prepare_query(
+            '''
+            id = ANY(
+                {% for val in value %}
+                    (SELECT recipe_id FROM ingredient
+                     WHERE ingredient_text = {{ val }})
+                    {% if not loop.last %}
+                        INTERSECT
+                    {% endif %}
+                {% endfor %}
+            )
+            ''',
+            value=clause['value_vivified'],
+        )
+
+That's it! Now we can make queries like
+
+.. code-block :: json
+
+    {
+        "logical_op": "&",
+        "filter_clauses": [
+            {
+                "data_source": "Ingredients",
+                "operator": "all of",
+                "value": ["Tomato", "Basil", "Mozzarella"]
+            }
+        ]
+    }
+
+to produce SQL like
+
+.. code-block :: sql
+
+    id = ANY(
+
+        (SELECT recipe_id FROM ingredient
+         WHERE ingredient_text = 'Tomato')
+            INTERSECT
+        (SELECT recipe_id FROM ingredient
+         WHERE ingredient_text = 'Basil')
+            INTERSECT
+        (SELECT recipe_id FROM ingredient
+         WHERE ingredient_text = 'Mozzarella')
+
+    )
+
 Adding value types
 ------------------
 
