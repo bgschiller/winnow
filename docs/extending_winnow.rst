@@ -146,7 +146,7 @@ We'll also need to specify that the Ingredients data_source supports 'collection
        "value_types": ["collection", "collection_any"]
     }
 
-Finally, we need to provide instructions for building SQL to answer that query. Let's do that using a special case handler to begin with, but we'll revisit this decision in another section.
+Finally, we need to provide instructions for building SQL to answer that query. Let's do that using a special case handler to begin with, but we'll revisit this decision in the next section.
 
 .. code-block :: python
 
@@ -198,6 +198,27 @@ to produce SQL like
          WHERE ingredient_text = 'Mozzarella')
 
     )
+
+Including more data sources
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In the last section, we said we would revisit the decision to use a special case handler. Well, that time has come! We have another data source where the 'all of' operator makes sense, and that's 'Suitable for Diet'. Our users are clamoring to be able to find recipes that are both gluten-free *and* vegetarian.
+
+Now, for only two data sources, I would probably just use two special case handlers. But it's instructive to see how we might do things with 3, 4, 5, or more data sources. And since this *is* the documentation...
+
+Let's override the definition of ``Winnow.where_clause``
+
+.. code-block :: python
+
+    class RecipeWinnow(Winnow):
+
+        def where_clause(self, data_source, operator, value):
+            if op['value_type'] == 'collection_all':
+                return collection_all_of(data_source, operator, value):
+            return super().where_clause(data_source, operator, value)
+
+
+
 
 Adding value types
 ------------------

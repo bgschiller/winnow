@@ -270,8 +270,8 @@ class Winnow(object):
 
         return self._default_clause(clause)
 
-    def where_clause(self, column, op, value):
-        return sql_prepare.where_clause(column, op, value)
+    def where_clause(self, data_source, operator, value):
+        return sql_prepare.where_clause(data_source['column'], operator, value)
 
     def _default_clause(self, clause):
         """
@@ -280,7 +280,7 @@ class Winnow(object):
         ds = clause['data_source_resolved']
         op = clause['operator_resolved']
         value = clause['value_vivified']
-        return self.where_clause(ds['column'], op, value)
+        return self.where_clause(ds, op, value)
 
     @classmethod
     def special_case(cls, source_name, *value_types):
