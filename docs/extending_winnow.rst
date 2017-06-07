@@ -44,7 +44,6 @@ By default, if we try to write a filter like
     // source definition
     {
        "display_name": "Ingredients",
-       "column": "ingredient",
        "value_types": ["collection"]
     }
 
@@ -119,7 +118,7 @@ When searching recipes, it makes sense to ask for recipes that use *all of* a li
 
 That's pretty painful to write. If your UI mirrors our json structure, it could be difficult for users to discover how to create a filter like that. Let's create an operator to handle this case.
 
-First, we'll need to make a value type. We could piggyback on the 'collection' value type, but other collections don't necessarily know how to handle an 'all of' operator. For example, imagine we had a data source that was a star rating between 1 and 5. It wouldn't make sense to say "Rating is all of [3, 4]". By making a specific value type, we can allow each data source to decide whether or not to permit this operator. Let's call it 'collection_any'.
+First, we'll need to make a value type. We could piggyback on the 'collection' value type, but other collections don't necessarily know how to handle an 'all of' operator. For example, imagine we had a data source that was a star rating between 1 and 5. It wouldn't make sense to say "Rating is all of [3, 4]". By making a specific value type, we can allow each data source to decide whether or not to permit this operator. Let's call it 'collection_all'.
 
 Now we'll add the operator to Winnow's list.
 
@@ -135,22 +134,21 @@ Now we'll add the operator to Winnow's list.
             },
         ]
 
-We'll also need to specify that the Ingredients data_source supports 'collection_any'.
+We'll also need to specify that the Ingredients data_source supports 'collection_all'.
 
 .. code-block :: json
 
     // source definition
     {
        "display_name": "Ingredients",
-       "column": "ingredient",
-       "value_types": ["collection", "collection_any"]
+       "value_types": ["collection", "collection_all"]
     }
 
 Finally, we need to provide instructions for building SQL to answer that query. Let's do that using a special case handler to begin with, but we'll revisit this decision in the next section.
 
 .. code-block :: python
 
-    @RecipeWinnow.special_case('Ingredients', 'collection_any')
+    @RecipeWinnow.special_case('Ingredients', 'collection_all')
     def ingredients(rw, clause):
         return rw.sql.prepare_query(
             '''
@@ -214,31 +212,68 @@ Let's override the definition of ``Winnow.where_clause``
 
         def where_clause(self, data_source, operator, value):
             if op['value_type'] == 'collection_all':
-                return collection_all_of(data_source, operator, value):
+                return self.collection_all_of(data_source, operator, value):
             return super().where_clause(data_source, operator, value)
 
+        def collection_all_of(self, data_source, operator, value):
+            return self.prepare_query(
+                '''
+                id = ANY(
+                    {% for val in values %}
+                        (SELECT {{ foreign_key | sqlsafe }}
+                         FROM {{ foreign_table | sqlsafe }}
+                         WHERE {{ column | sqlsafe }} = {{ val }})
+                        {% if not loop.last %} INTERSECT {% endif %}
+                    {% endfor %}
+                )''',
+                values=value,
+                foreign_key=data_source['foreign_key'],
+                foreign_table=data_source['foreign_table'],
+                column=data_source['column'],
+            )
 
+Notice that there's a few more pieces of information that we're expecting from ``data_source`` now: ``foreign_key``, ``foreign_table``, and ``column``. With 'Ingredients', all of this was just hard-coded. Now, since we want this to work for both 'Ingredients' and 'Suitable for Diet', we need to pass those values in as parameters. We'll store them on the data source:
 
+.. code-block :: json
 
-Adding value types
-------------------
+    // source definitions
+    {
+       "display_name": "Ingredients",
+       "value_types": ["collection", "collection_all"],
+       "foreign_table": "ingredient",
+       "foreign_key": "recipe_id",
+       "column": "ingredient_text",
 
-relative_to_date_field
-^^^^^^^^^^^^^^^^^^^^^^
-This will allow us to say "Expected close Date before <any other date field>".
+    },
+    {
+       "display_name": "Suitable for Diet",
+       "value_types": ["collection", "collection_all"],
+       "picklist_values": ["vegan", "vegetarian", "gluten-free", "halal", "kosher"],
+       "foreign_table": "diet_suitability",
+       "foreign_key": "recipe_id",
+       "column": "diet",
+    }
 
-historical
-^^^^^^^^^^
-
-Stage was 'Prospecting' as of <date>
-
-Adding custom fields
---------------------
-
-User-specific fields, generated dynamically
-
-
-Replacing relative date handling
---------------------------------
-
-"We want to start our year in February."
+.. 
+.. Adding value types
+.. ------------------
+..
+.. relative_to_date_field
+.. ^^^^^^^^^^^^^^^^^^^^^^
+.. This will allow us to say "Expected close Date before <any other date field>".
+..
+.. historical
+.. ^^^^^^^^^^
+..
+.. Stage was 'Prospecting' as of <date>
+..
+.. Adding custom fields
+.. --------------------
+..
+.. User-specific fields, generated dynamically
+..
+..
+.. Replacing relative date handling
+.. --------------------------------
+..
+.. "We want to start our year in February."
